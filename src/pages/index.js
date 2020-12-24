@@ -1,22 +1,55 @@
 import React from "react"
-import { Link } from "gatsby"
+import { Link, graphql } from "gatsby"
+import Img from "gatsby-image"
 
 import Layout from "../components/layout"
-import Image from "../components/image"
 import SEO from "../components/seo"
 
-const IndexPage = () => (
-  <Layout>
-    <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link> <br />
-    <Link to="/using-typescript/">Go to "Using TypeScript"</Link>
-  </Layout>
-)
+const IndexPage = ({ data }) => {
+  const posts = data.allWpPost.edges
+  return (
+    <Layout>
+      <SEO title="Home" />
+      <h2>Wordpressの記事をGatsbyで取得して表示</h2>
+      {posts.map(({ node }) => (
+        <div key={node.slug}>
+          <div>{node.date}</div>
+          <h3>
+            <Link to={node.slug}>{node.title}</Link>
+          </h3>
+          <Img
+            fixed={node.featuredImage.node.localFile.childImageSharp.fixed}
+            alt={node.title}
+          />
+        </div>
+      ))}
+    </Layout>
+  )
+}
 
 export default IndexPage
+
+export const pageQuery = graphql`
+  query HomeQuery {
+    allWpPost(sort: { fields: [date], order: DESC }) {
+      edges {
+        node {
+          date(formatString: "YYYY/MM/DD")
+          slug
+          title
+          featuredImage {
+            node {
+              localFile {
+                childImageSharp {
+                  fixed(width: 500, height: 500) {
+                    ...GatsbyImageSharpFixed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
